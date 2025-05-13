@@ -5,138 +5,136 @@
 #include <sstream>
 #include <string>
 #include <limits>
+#include <algorithm> 
 
-#define RESET   "\033[0m"
-#define BOLD_CYAN "\033[1;36m"
-#define BOLD_YELLOW "\033[1;33m"
-#define BOLD_GREEN "\033[1;32m"
-#define BOLD_BLUE "\033[1;34m"
-#define BOLD_MAGENTA "\033[1;35m"
-#define BOLD_RED "\033[1;31m"
+#define CONSOLE_FORMAT_START "\033[1;36m"
+#define CONSOLE_FORMAT_END "\033[0m"
+
+#define BOLD_CYAN_TEXT "\033[1;36m" 
+#define BOLD_YELLOW_TEXT "\033[1;33m"
+#define BOLD_GREEN_TEXT "\033[1;32m"
+#define BOLD_BLUE_TEXT "\033[1;34m"
+#define BOLD_MAGENTA_TEXT "\033[1;35m"
+#define BOLD_RED_TEXT "\033[1;31m"
+#define RESET_TEXT_FORMAT   "\033[0m"
+
 
 template <typename T>
-void printVector(const std::vector<T>& vec) {
-    std::cout << BOLD_MAGENTA << "My vector has " << BOLD_YELLOW << vec.size() << BOLD_MAGENTA << " of these elements:" << RESET << "\n";
-    for (size_t i = 0; i < vec.size(); ++i) {
-        std::cout << BOLD_BLUE << "[" << i << "]" << RESET << " -> " << BOLD_GREEN << vec[i] << RESET << "\n";
+void printVectorCustom(const std::vector<T>& vec, std::ostream& out_stream = std::cout) {
+    out_stream << BOLD_MAGENTA_TEXT << "My vector has " << BOLD_YELLOW_TEXT << vec.size() << BOLD_MAGENTA_TEXT << " of these elements:" << RESET_TEXT_FORMAT << "\n";
+    for (size_t i = 0u; i < vec.size(); ++i) {
+        out_stream << BOLD_BLUE_TEXT << "[" << i << "]" << RESET_TEXT_FORMAT << " -> " << BOLD_GREEN_TEXT << vec[i] << RESET_TEXT_FORMAT << "\n";
     }
 }
 
 template <typename T>
-void printVectorToFile(const std::vector<T>& vec, const std::string& filename) {
-    std::ofstream out(filename);
-    if (!out) {
-        std::cerr << BOLD_RED << "Error opening file: " << filename << RESET << "\n";
+void printVectorCustomToFile(const std::vector<T>& vec, const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (!outFile) {
+        std::cerr << BOLD_RED_TEXT << "Error opening file for writing: " << filename << RESET_TEXT_FORMAT << "\n";
         return;
     }
-    out << "My vector has " << vec.size() << " of these elements:\n";
-    for (size_t i = 0; i < vec.size(); ++i) {
-        out << "[" << i << "] -> " << vec[i] << "\n";
-    }
+    printVectorCustom(vec, outFile); 
+    outFile.close();
+    std::cout << BOLD_GREEN_TEXT << "Vector data saved to " << filename << RESET_TEXT_FORMAT << std::endl;
 }
 
 template <typename T>
 std::vector<T> operator+(const std::vector<T>& lhs, const std::vector<T>& rhs) {
     std::vector<T> result = lhs;
     result.insert(result.end(), rhs.begin(), rhs.end());
-    std::cout << BOLD_YELLOW << "\n--- Combined Vector (Result of vec1 + vec2) ---" << RESET << std::endl;
-    printVector(result);
+    std::cout << BOLD_YELLOW_TEXT << "\n--- Combined Vector (Result of vec1 + vec2) ---" << RESET_TEXT_FORMAT << std::endl;
+    printVectorCustom(result); 
     return result;
 }
 
 template <typename T>
-std::istream& operator>>(std::istream& in, std::vector<T>& vec) {
+std::istream& operator>>(std::istream& in_stream, std::vector<T>& vec) {
     vec.clear();
     std::string line;
-    std::getline(in, line);
+    if (!std::getline(in_stream, line)) {
+        if (in_stream.eof() && line.empty() && vec.empty()) {
+            
+            in_stream.clear(); 
+        }
+        return in_stream;
+    }
+    
 
+    std::replace(line.begin(), line.end(), ',', ' ');
+    std::replace(line.begin(), line.end(), ';', ' ');
+    
     std::stringstream ss(line);
-    std::string item;
-    char delimiter = ' '; 
-
-    if (line.find(',') != std::string::npos) {
-        delimiter = ',';
-    } else if (line.find(';') != std::string::npos) {
-        delimiter = ';';
+    T value;
+    while (ss >> value) {
+        vec.push_back(value);
     }
 
-    while (std::getline(ss, item, delimiter)) {
-        if (item.empty()) {
-            continue;
-        }
-        
-        size_t first = item.find_first_not_of(" \t\n\r\f\v");
-        if (std::string::npos == first) { 
-            continue;
-        }
-        size_t last = item.find_last_not_of(" \t\n\r\f\v");
-        std::string trimmed_item = item.substr(first, (last - first + 1));
+    if (ss.fail() && !ss.eof()) {
+        ss.clear(); 
 
-        if (trimmed_item.empty()) {
-            continue;
-        }
-
-        std::stringstream itemStream(trimmed_item);
-        T value;
-        if (itemStream >> value) { 
-             vec.push_back(value);
-        } else {
-            itemStream.clear(); 
-        }
     }
-    return in;
+    return in_stream;
 }
 
 template <typename K, typename V>
-void printMap(const std::map<K, V>& m) {
-    std::cout << BOLD_MAGENTA << "My map has " << BOLD_YELLOW << m.size() << BOLD_MAGENTA << " of keys and has these pairs:" << RESET << "\n";
-    for (const auto& pair : m) { 
-        std::cout << BOLD_BLUE << "[" << pair.first << "]" << RESET << " -> {" << BOLD_GREEN << pair.second << RESET << "}\n";
+void printMapCustom(const std::map<K, V>& m, std::ostream& out_stream = std::cout) {
+    out_stream << BOLD_MAGENTA_TEXT << "My map has " << BOLD_YELLOW_TEXT << m.size() << BOLD_MAGENTA_TEXT << " of keys and has these pairs:" << RESET_TEXT_FORMAT << "\n";
+    for (const auto& pair_item : m) { 
+        out_stream << BOLD_BLUE_TEXT << "[" << pair_item.first << "]" << RESET_TEXT_FORMAT << " -> {" << BOLD_GREEN_TEXT << pair_item.second << RESET_TEXT_FORMAT << "}\n";
     }
 }
 
 template <typename K, typename V>
-void printMapToFile(const std::map<K, V>& m, const std::string& filename) {
-    std::ofstream out(filename);
-    if (!out) {
-        std::cerr << BOLD_RED << "Error opening file: " << filename << RESET << "\n";
+void printMapCustomToFile(const std::map<K, V>& m, const std::string& filename) {
+    std::ofstream outFile(filename);
+    if (!outFile) {
+        std::cerr << BOLD_RED_TEXT << "Error opening file for writing: " << filename << RESET_TEXT_FORMAT << "\n";
         return;
     }
-    out << "My map has " << m.size() << " of keys and has these pairs:\n";
-    for (const auto& pair : m) {
-        out << "[" << pair.first << "] -> {" << pair.second << "}\n";
-    }
+    printMapCustom(m, outFile);
+    outFile.close();
+    std::cout << BOLD_GREEN_TEXT << "Map data saved to " << filename << RESET_TEXT_FORMAT << std::endl;
 }
 
 int main() {
-    std::cout << BOLD_CYAN << "Student: Iliia_Orlov" << RESET << "\n"
-              << BOLD_CYAN << "Group:   M1O-101BV-24" << RESET << "\n"
-              << BOLD_CYAN << "Task:    4.1" << RESET << "\n\n"; 
+    std::cout << CONSOLE_FORMAT_START;
 
-    std::vector<int> vec1, vec2;
-    std::cout << BOLD_YELLOW << "Enter elements for vector 1 (space/comma/semicolon separated):" << RESET << std::endl;
-    std::cin >> vec1;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+    std::cout << "Student: Iliia_Orlov\n";
+    std::cout << "Group: M1O-101BV-24\n";
+    std::cout << "Task: 4.1\n\n";
 
-    std::cout << BOLD_YELLOW << "\nEnter elements for vector 2 (space/comma/semicolon separated):" << RESET << std::endl;
-    std::cin >> vec2;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::vector<int> vec1_data, vec2_data;
+    std::cout << BOLD_YELLOW_TEXT << "Enter elements for vector 1 (space, comma, or semicolon separated):" << RESET_TEXT_FORMAT << std::endl;
+    std::cin >> vec1_data;
 
-    std::vector<int> combined = vec1 + vec2; 
 
-    printVectorToFile(combined, "vector_output.txt");
-    std::cout << "\n" << BOLD_GREEN << "Combined vector saved to vector_output.txt" << RESET << std::endl;
+    std::cout << BOLD_YELLOW_TEXT << "\nEnter elements for vector 2 (space, comma, or semicolon separated):" << RESET_TEXT_FORMAT << std::endl;
+    std::cin >> vec2_data;
 
-    std::cout << "\n" << BOLD_YELLOW << "--- Map Example ---" << RESET << std::endl;
-    std::map<std::string, int> myMap = {
+
+    std::cout << "\nVector 1 contents:" << std::endl;
+    printVectorCustom(vec1_data);
+    std::cout << "\nVector 2 contents:" << std::endl;
+    printVectorCustom(vec2_data);
+
+    std::vector<int> combined_vector = vec1_data + vec2_data; 
+    printVectorCustomToFile(combined_vector, "vector_output.txt");
+
+    std::cout << "\n" << BOLD_YELLOW_TEXT << "--- Map Example ---" << RESET_TEXT_FORMAT << std::endl;
+    std::map<std::string, int> mySampleMap = {
         {"apple", 5},   
         {"banana", 3},  
         {"orange", 7} 
     };
     
-    printMap(myMap);
-    printMapToFile(myMap, "map_output.txt");
-    std::cout << BOLD_GREEN << "Map data saved to map_output.txt" << RESET << std::endl;
+    printMapCustom(mySampleMap);
+    printMapCustomToFile(mySampleMap, "map_output.txt");
 
+    std::cout << "\nPress Enter to exit...";
+
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    std::cout << CONSOLE_FORMAT_END;
     return 0;
 }

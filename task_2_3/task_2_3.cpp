@@ -2,52 +2,64 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <limits>
 
-using namespace std;
+#define COLOR_BLUE_OUTPUT "\033[1;34m"
+#define COLOR_GREEN_OUTPUT "\033[1;32m"
+#define COLOR_RED_OUTPUT "\033[1;31m"
+#define RESET_OUTPUT "\033[0m"
+#define CONSOLE_FORMAT_START "\033[1;36m"
+#define CONSOLE_FORMAT_END "\033[0m"
 
-#define COLOR_BLUE "\033[1;34m"
-#define COLOR_GREEN "\033[1;32m"
-#define COLOR_RED "\033[1;31m"
-#define RESET "\033[0m"
+void searchAndReplaceInFileOperation() {
+    std::cout << COLOR_BLUE_OUTPUT << "Enter word to search: " << RESET_OUTPUT;
+    std::string searchWord;
+    std::getline(std::cin, searchWord);
 
-void searchAndReplaceInFile() {
-    cout << COLOR_BLUE << "Enter word to search: " << RESET;
-    string searchWord;
-    cin >> searchWord;
-    cout << COLOR_BLUE << "Enter word to replace: " << RESET;
-    string replaceWord;
-    cin >> replaceWord;
+    std::cout << COLOR_BLUE_OUTPUT << "Enter word to replace with: " << RESET_OUTPUT;
+    std::string replaceWord;
+    std::getline(std::cin, replaceWord);
     
-    ifstream inFile("text.txt");
-    if (!inFile) { 
-        cout << COLOR_RED << "File text.txt not found." << RESET << "\n";
+    std::ifstream inputFile("text.txt");
+    if (!inputFile) { 
+        std::cout << COLOR_RED_OUTPUT << "Error: File text.txt not found." << RESET_OUTPUT << "\n";
         return; 
     }
-    stringstream buffer;
-    buffer << inFile.rdbuf();
-    string content = buffer.str();
-    inFile.close();
+    std::stringstream buffer;
+    buffer << inputFile.rdbuf();
+    std::string content = buffer.str();
+    inputFile.close();
     
-    size_t pos = 0;
-    while ((pos = content.find(searchWord, pos)) != string::npos) {
+    size_t pos = 0u;
+    while ((pos = content.find(searchWord, pos)) != std::string::npos) {
         content.replace(pos, searchWord.length(), replaceWord);
         pos += replaceWord.length();
     }
-    ofstream outFile("modified.txt");
-    if (!outFile) { 
-        cout << COLOR_RED << "Error opening modified.txt." << RESET << "\n";
+
+    std::ofstream outputFile("modified.txt");
+    if (!outputFile) { 
+        std::cout << COLOR_RED_OUTPUT << "Error opening modified.txt for writing." << RESET_OUTPUT << "\n";
         return; 
     }
-    outFile << content;
-    outFile.close();
-    cout << COLOR_GREEN << "Search and replace completed." << RESET << "\n";
+    outputFile << content;
+    outputFile.close();
+    std::cout << COLOR_GREEN_OUTPUT << "Search and replace completed. Result saved to modified.txt." << RESET_OUTPUT << "\n";
 }
 
 int main() {
-    cout << COLOR_GREEN << "Student: Iliia_Orlov" << RESET << "\n";
-    cout << COLOR_GREEN << "Group: M1O-101BV-24" << RESET << "\n";
-    cout << COLOR_GREEN << "Task: 2.3" << RESET << "\n\n";
+    std::cout << CONSOLE_FORMAT_START;
+
+    std::cout << "Student: Iliia_Orlov\n";
+    std::cout << "Group: M1O-101BV-24\n";
+    std::cout << "Task: 2.3\n\n";
     
-    searchAndReplaceInFile();
+    searchAndReplaceInFileOperation();
+    
+    std::cout << "\nPress Enter to exit...";
+
+    std::cin.clear(); 
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    std::cout << CONSOLE_FORMAT_END;
     return 0;
 }

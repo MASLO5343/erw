@@ -2,52 +2,71 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector> 
+#include <limits>
 
-using namespace std;
+#define COLOR_BLUE_OUTPUT "\033[1;34m"
+#define COLOR_GREEN_OUTPUT "\033[1;32m"
+#define COLOR_RED_OUTPUT "\033[1;31m"
+#define RESET_OUTPUT "\033[0m"
+#define CONSOLE_FORMAT_START "\033[1;36m"
+#define CONSOLE_FORMAT_END "\033[0m"
 
-#define COLOR_BLUE "\033[1;34m"
-#define COLOR_GREEN "\033[1;32m"
-#define COLOR_RED "\033[1;31m"
-#define RESET "\033[0m"
-
-void splitFileIntoParts() {
-    cout << COLOR_BLUE << "Enter number of characters per part: " << RESET;
+void splitFileIntoPartsOperation() {
+    std::cout << COLOR_BLUE_OUTPUT << "Enter number of characters per part: " << RESET_OUTPUT;
     int partSize;
-    cin >> partSize;
+    std::cin >> partSize;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); 
+
     if (partSize <= 0) { 
-        cout << COLOR_RED << "Invalid value." << RESET << "\n";
+        std::cout << COLOR_RED_OUTPUT << "Invalid part size. Must be a positive integer." << RESET_OUTPUT << "\n";
         return; 
     }
-    ifstream inFile("large_file.txt");
-    if (!inFile) { 
-        cout << COLOR_RED << "File large_file.txt not found." << RESET << "\n";
+
+    std::ifstream inputFile("large_file.txt");
+    if (!inputFile) { 
+        std::cout << COLOR_RED_OUTPUT << "Error: File large_file.txt not found." << RESET_OUTPUT << "\n";
         return; 
     }
-    stringstream buffer;
-    buffer << inFile.rdbuf();
-    string content = buffer.str();
-    inFile.close();
+    std::stringstream buffer;
+    buffer << inputFile.rdbuf();
+    std::string content = buffer.str();
+    inputFile.close();
     
-    int total = content.size();
-    int parts = (total + partSize - 1) / partSize;
-    for (int i = 0; i < parts; i++) {
-        string part = content.substr(i * partSize, partSize);
-        ofstream outFile("part" + to_string(i + 1) + ".txt");
-        if (!outFile) { 
-            cout << COLOR_RED << "Error creating file part" << (i + 1) << ".txt" << RESET << "\n";
-            continue;
-        }
-        outFile << part;
-        outFile.close();
+    if (content.empty()) {
+        std::cout << COLOR_RED_OUTPUT << "File large_file.txt is empty. No parts created." << RESET_OUTPUT << "\n";
+        return;
     }
-    cout << COLOR_GREEN << "Number of parts created: " << parts << RESET << "\n";
+
+    int totalCharacters = content.length();
+    int numberOfParts = (totalCharacters + partSize - 1) / partSize; 
+    
+    for (int i = 0; i < numberOfParts; ++i) {
+        std::string partContent = content.substr(static_cast<size_t>(i) * partSize, partSize);
+        std::ofstream outputFile("part" + std::to_string(i + 1) + ".txt");
+        if (!outputFile) { 
+            std::cout << COLOR_RED_OUTPUT << "Error creating file part" << (i + 1) << ".txt" << RESET_OUTPUT << "\n";
+            continue; 
+        }
+        outputFile << partContent;
+        outputFile.close();
+    }
+    std::cout << COLOR_GREEN_OUTPUT << "File large_file.txt split into " << numberOfParts << " parts." << RESET_OUTPUT << "\n";
 }
 
 int main() {
-    cout << COLOR_GREEN << "Student: Iliia_Orlov" << RESET << "\n";
-    cout << COLOR_GREEN << "Group: M1O-101BV-24" << RESET << "\n";
-    cout << COLOR_GREEN << "Task: 2.6" << RESET << "\n\n";
+    std::cout << CONSOLE_FORMAT_START;
+
+    std::cout << "Student: Iliia_Orlov\n";
+    std::cout << "Group: M1O-101BV-24\n";
+    std::cout << "Task: 2.6\n\n";
     
-    splitFileIntoParts();
+    splitFileIntoPartsOperation();
+    
+    std::cout << "\nPress Enter to exit...";
+
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    std::cin.get();
+    std::cout << CONSOLE_FORMAT_END;
     return 0;
 }
